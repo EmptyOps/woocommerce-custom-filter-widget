@@ -1,25 +1,31 @@
 <?php 
-class WOO_CUSTOME_FILTER_Widget {
+class EO_WBC_Filter_Widget {
 
 	function __construct()
 	{	
-        $this->enque_asset();				
+        $this->eo_wbc_filter_enque_asset();		
+		$this->_category=$this->eo_wbc_get_category();
 		$this->get_widget();		
 	}
 
-	private function enque_asset()
-	{		
+	private function eo_wbc_filter_enque_asset()
+	{
+		$current_category=$this->eo_wbc_get_category();
 		$site_url=site_url();
 
 		wp_enqueue_script('jquery');
+		//wp_enqueue_script('jquery-ui-core');
+		//wp_enqueue_script('jquery-ui-widget');
+		//wp_enqueue_script('jquery-ui-mouse');
 		wp_enqueue_script('jquery-ui-accordion');
+		//wp_enqueue_script('jquery-ui-autocomplete');
 		wp_enqueue_script('jquery-ui-slider');
+		
+		wp_register_style( 'eo_wbc_ui_css',plugin_dir_url( __FILE__ ).'css/jquery-ui.min.css');
+		wp_enqueue_style( 'eo_wbc_ui_css' );
 
-		wp_register_style( 'jquery-ui-css',plugin_dir_url( __FILE__ ).'css/jquery-ui.min.css');
-		wp_enqueue_style( 'jquery-ui-css' );
-
-		wp_register_style( 'woo_custome_filter_css',plugin_dir_url( __FILE__ ).'css/filter.css');
-		wp_enqueue_style( 'woo_custome_filter_css' );
+		wp_register_style( 'eo_wbc_filter_css',plugin_dir_url( __FILE__ ).'css/eo_wbc_filter.css');
+		wp_enqueue_style( 'eo_wbc_filter_css' );
 
 		wp_register_style( 'dataTables-css','https://cdn.datatables.net/v/dt/dt-1.10.18/datatables.min.css');
 		wp_register_script('dataTables-js','https://cdn.datatables.net/v/dt/dt-1.10.18/datatables.min.js');
@@ -27,16 +33,15 @@ class WOO_CUSTOME_FILTER_Widget {
 		wp_enqueue_style( 'dataTables-css');
 		wp_enqueue_script( 'dataTables-js');
 
-		$fg_color='#357DFD';
-		$bg_color='#357DFD';
+		$fg_color=wc()->session->get('EO_WBC_BG_COLOR','#357DFD');
 
 		//wp-head here....
 		echo "<style>						
 				.loading{												
 					background-image:url(".plugin_dir_url(__FILE__)."icon/spinner.gif);				
 				}			
-				#woo_custome_filter_table th{
-					background-color: {$bg_color};
+				#eo_wbc_filter_table th{
+					background-color:".wc()->session->get('EO_WBC_BG_COLOR','#357DFD').";
 				}
 				.ui-widget-header{
 					border: 1px solid {$fg_color} !important;
@@ -52,18 +57,65 @@ class WOO_CUSTOME_FILTER_Widget {
 					 border: 1px solid {$fg_color} !important;
 					 background: {$fg_color} !important;
 				}
-				.woo_custome_filter_icon_select{
+				.eo_wbc_filter_icon_select{
 					border-bottom:2px solid {$fg_color} !important;
 				}
-				.woo_custome_filter_icon:hover:not(.none_editable){
+				.eo_wbc_filter_icon:hover:not(.none_editable){
 					border-bottom:2px solid {$fg_color};						
 				}
 			</style>";		
             
-        wp_register_script('woo_custome_filter_js',plugins_url('js/filter.js',__FILE__),array('jquery'));        
-        wp_enqueue_script('woo_custome_filter_js');
+        wp_register_script('eo_wbc_filter_js',plugins_url('js/eo_wbc_filter.js',__FILE__),array('jquery'));
+        
+        wp_localize_script('eo_wbc_filter_js','eo_wbc_object',array(
+        					'eo_product_url'=>$this->product_url(),
+        					//'eo_view_tabular'=>($current_category=='solitaire'?1:0),
+        					'eo_view_tabular'=>0,
+        					'eo_admin_ajax_url'=>$site_url."/wp-admin/admin-ajax.php",
+        					'eo_part_site_url'=>$site_url.'/product/',
+        					'eo_part_end_url'=>'/'.$this->product_url(),
+        					'eo_cat_site_url'=>$site_url."/product-category/".$current_category,
+        					'eo_cat_query'=>'/?'.http_build_query($_GET)
+        				));            
+
+        wp_enqueue_script('eo_wbc_filter_js');
         
 	}		
+
+	private function product_url() {
+		$url='?EO_WBC=1'.
+            '&BEGIN='.sanitize_text_field($_GET['BEGIN']).
+            '&STEP='.sanitize_text_field($_GET['STEP']).                            
+            '&FIRST='.
+            (
+                $this->eo_wbc_get_category()==get_option('eo_wbc_first_slug') 
+                    ?
+                ''
+                    :
+                (
+                    !empty($_GET['FIRST'])
+                        ? 
+                    sanitize_text_field( $_GET['FIRST'])
+                        :
+                    ''
+                )
+            ).
+            '&SECOND='.
+            (
+                $this->eo_wbc_get_category()==get_option('eo_wbc_second_slug')
+                    ?
+                ''
+                    :
+                (
+                    !empty($_GET['SECOND'])
+                        ?
+                    sanitize_text_field($_GET['SECOND'])
+                        :
+                    ''
+                )
+            );
+        return $url;
+	}
 
 	//Returns minimum value and maximum value of range;
 	private function range_min_max($id,$title='',$filter_type=0) {
@@ -134,7 +186,7 @@ class WOO_CUSTOME_FILTER_Widget {
 		<div>
 			<fieldset>
 				<legend><?php echo $filter['title']; ?></legend>
-				<div class="woo_custome_input_text_slider">									
+				<div class="eo_wbc_input_text_slider">									
 				    <input class="text_slider_<?php echo $filter['slug'] ?>" type="text"  name="min_<?php echo $filter['slug'] ?>" 
 				    		data-index="0" value="<?php echo $filter['min_value']['name'] ?>" />				    
 
@@ -172,14 +224,30 @@ class WOO_CUSTOME_FILTER_Widget {
 				    			$("[name='_attribute']").val($("[name='_attribute']").val()+',<?php echo $filter['slug'] ?>')
 				    		}
 				    	}
-				    	$('[name="paged"]').val('1');
-				    	woo_custome_filter_change();
+				    	$('[name="_paged_"]').val('1');
+				    	eo_wbc_filter_change();
 				    }
 				});
 
 				$("input.text_slider_<?php echo $filter['slug'] ?>").change(function() {				    
 					$("#text_slider_<?php echo $filter['slug'] ?>").slider("values", $(this).data("index"), $(this).val());
-				});			
+				});
+
+				jQuery(".eo_wbc_srch_btn:eq(2)").on('reset',function(){					
+
+					//document.forms.eo_wbc_filter.reset();
+					var slider=jQuery("#text_slider_<?php echo $filter['slug']; ?>");
+
+					var min_value=slider.slider("option","min");
+					var max_value=slider.slider("option","max");
+
+					slider.slider("values", 0, min_value);
+					slider.slider("values", 1, max_value);
+					
+					jQuery("#<?php echo 'min_'.$filter['slug']; ?>").val(min_value);
+					jQuery("#<?php echo 'max_'.$filter['slug']; ?>").val(max_value);						
+					//eo_wbc_filter_change(true);
+				});
 
 			});
 		</script>
@@ -233,12 +301,12 @@ class WOO_CUSTOME_FILTER_Widget {
 
 		$filter=$this->range_steps($id,$title,$filter_type);
 
-		$items_name=array_column($filter['list'],'name');			
-		$items_slug=array_column($filter['list'],'slug');	
+		$items_name=EO_WBC_Support::array_column($filter['list'],'name');			
+		$items_slug=EO_WBC_Support::array_column($filter['list'],'slug');	
 
 		?>
 		<div>
-			<fieldset class='woo_custome_input_step_slider'>
+			<fieldset class='eo_wbc_filter_widget'>
 				<legend><?php echo $filter['title']; ?></legend>
 					<div id='filter_legend_<?php echo $filter['slug']; ?>'></div>
 					<input type='hidden' name='<?php echo 'min_'.$filter['slug']; ?>' id='<?php echo 'min_'.$filter['slug']; ?>' 
@@ -283,8 +351,8 @@ class WOO_CUSTOME_FILTER_Widget {
 					    			$("[name='_attribute']").val($("[name='_attribute']").val()+',<?php echo $filter['slug'] ?>');
 					    		}
 					    	}
-					    	$('[name="paged"]').val('1');
-					    	woo_custome_filter_change();
+					    	$('[name="_paged_"]').val('1');
+					    	eo_wbc_filter_change();
 						}
 
 					});
@@ -295,7 +363,23 @@ class WOO_CUSTOME_FILTER_Widget {
 						if(key === 0 || key === items_name_<?php echo $filter['slug']; ?>.length-1) w = scale/2;
 						$('#filter_legend_<?php echo $filter['slug']; ?>')
 							.append("<label title='"+value+"' style='width:"+w+"%'>"+value+"</label>");
-					});				
+					});
+
+					jQuery(".eo_wbc_srch_btn:eq(2)").on('reset',function(){
+
+						//document.forms.eo_wbc_filter.reset();
+						var slider=jQuery("#step_slider_<?php echo $filter['slug']; ?>");
+
+						var min_value=slider.slider("option","min");
+						var max_value=slider.slider("option","max");
+
+						slider.slider("values", 0, min_value);
+						slider.slider("values", 1, max_value);
+						
+						jQuery("#<?php echo 'min_'.$filter['slug']; ?>").val(items_slug_<?php echo $filter['slug']; ?>[min_value-1]);
+						jQuery("#<?php echo 'max_'.$filter['slug']; ?>").val(items_slug_<?php echo $filter['slug']; ?>[max_value-1]);						
+						//eo_wbc_filter_change(true);
+					});
 
 				});				
 			</script>
@@ -321,7 +405,7 @@ class WOO_CUSTOME_FILTER_Widget {
     				</label>
     			<?php endforeach; ?>
     			</div>
-    			<input type="hidden" name="checklist_<?php echo $filter['slug']; ?>" value="<?php echo implode(',',array_column($filter['list'],'slug')); ?>">
+    			<input type="hidden" name="checklist_<?php echo $filter['slug']; ?>" value="<?php echo implode(',',EO_WBC_Support::array_column($filter['list'],'slug')); ?>">
 			</fieldset><br/>
 			<script>
 				jQuery(document).ready(function($){
@@ -354,9 +438,18 @@ class WOO_CUSTOME_FILTER_Widget {
 				    			$("[name='_attribute']").val($("[name='_attribute']").val()+',<?php echo $filter['slug'] ?>');
 				    		}
 				    	}
-						$('[name="paged"]').val('1');	
-						woo_custome_filter_change();
-					});				
+						$('[name="_paged_"]').val('1');	
+						eo_wbc_filter_change();
+					});
+
+					jQuery(".eo_wbc_srch_btn:eq(2)").on('reset',function(){					
+						
+						var arr=[];
+						jQuery(".checklist_<?php echo $filter['slug'] ?>").each(function(i,e){
+							arr.push(jQuery(e).attr('data-slug'));
+						})
+						jQuery("[name='checklist_pa_lab_report']").val(arr.join(','));
+					});
 
 				});
 			</script>
@@ -376,7 +469,7 @@ class WOO_CUSTOME_FILTER_Widget {
 			    <input type="text" class="sliderValue" data-index="0" value="$'.$min.'" />				    
 			    <input type="text" class="sliderValue" data-index="1" value="$'.$max.'" />    
 				</div>				
-				<div id="price_slider" class="ui-slider" style="margin-top:0.5em;"></div></fieldset></div><br/>
+				<div id="price_slider" class="ui-slider" style="margin-top:0.5em;"></fieldset></div><br/>
 				<script>jQuery(document).ready(function($) {
 				  $("#price_slider").slider({
 				  	range: true,
@@ -393,8 +486,8 @@ class WOO_CUSTOME_FILTER_Widget {
 				      	$("#price_max").val(ui.values[1]);
 				    },
 				    stop:function(event, ui) {
-				    	$("[name=\'paged\']").val("1");
-				    	woo_custome_filter_change();
+				    	$("[name=\'_paged_\']").val("1");
+				    	eo_wbc_filter_change();
 				    }
 				  });
 
@@ -402,17 +495,45 @@ class WOO_CUSTOME_FILTER_Widget {
 				    var $this = $(this);
 				    $("#price_slider").slider("values", $this.data("index"), $this.val());
 				  });
+				  
+				  jQuery(".eo_wbc_srch_btn:eq(2)").on("reset",function(){
+				  	
+				  	var slider=$("#price_slider");
+				  	slider.slider("values", 0, slider.slider("option","min"));
+				  	slider.slider("values", 1, slider.slider("option","max"));
+
+				  	$("input.sliderValue[data-index=\'0\']").val("$"+slider.slider("option","min"));
+			        $("input.sliderValue[data-index=\'1\']").val("$"+slider.slider("option","max"));
+			      
+			      	$("#price_min").val(slider.slider("option","min"));
+			      	$("#price_max").val(slider.slider("option","max"));
+				  	
+				  });
 				});
-			</script><div id="loading"></div>';	
+			</script></div><div id="loading"></div>';	
 	}
 	
 	private function get_widget() {
 
-		$filters=unserialize(get_option('woo_custome_filter_widget'));
+		$current_category=$this->eo_wbc_get_category();
 
-		echo '<form method="GET" name="woo_custome_filter_form" id="woo_custome_filter_form" style="clear: both;" >
-				<div class="woo_custome_primary_filter">
-					<input type="hidden" name="woo_custome_filter" value="1" />';
+		$filter_first=unserialize(get_option('eo_wbc_add_filter_first'));
+		$filter_second=unserialize(get_option('eo_wbc_add_filter_second'));
+		if($current_category==get_option('eo_wbc_first_slug')){
+			$filter=$filter_first;
+		}
+		elseif($current_category==get_option('eo_wbc_second_slug')){
+			$filter=$filter_second;	
+		}
+		echo '<form method="GET" name="eo_wbc_filter" id="eo_wbc_filter" style="clear: both;" >
+				<div class="eo_wbc_primary_filter">
+				<input type="hidden" name="eo_wbc_filter" value="1" />	
+				<input type="hidden" name="_paged_" value="1" />	
+				<input type="hidden" name="last_paged" value="1" />
+				<input type="hidden" name="action" value="eo_wbc_filter" />					
+				<input type="hidden" name="_current_category" value="'.$current_category.'" />
+				<input type="hidden" name="_category_query" id="eo_wbc_cat_query" 
+					value="'.(!empty($_GET['CAT_LINK'])?','.sanitize_text_field($_GET['CAT_LINK']):'').'" />';
 
 		$attr_list=array();
 		////////////////////////////////////////////////////////
@@ -422,11 +543,10 @@ class WOO_CUSTOME_FILTER_Widget {
 		
 		//Category Filters
 		$_category=array();
-		
-		foreach ($filters as $key => $item) {			
+		foreach ($filter as $key => $item) {			
 			if($item['type']==0 && ($item['input']=='icon' OR $item['input']=='icon_text') && $item['advance']==0) {
 
-				$this->woo_custome_filter_ui_icon($item['name'],$item['label'],$item['type'],$item['input']);								
+				$this->eo_wbc_filter_ui_icon($item['name'],$item['label'],$item['type'],$item['input']);								
 				$_category[]=get_term_by('id',$item['name'],'product_cat')->slug;
 			}
 			elseif ($item['type']==0 && $item['advance']==0) {
@@ -436,7 +556,7 @@ class WOO_CUSTOME_FILTER_Widget {
 		}			
 		echo '<input type="hidden" name="_category" value="'.implode(',',$_category).'"/>';
 		//Terms Filters
-		foreach ($filters as $key => $item) {			
+		foreach ($filter as $key => $item) {			
 			if($item['type']==1 && $item['advance']==0)
 			{
 				switch ($item['input']) {
@@ -463,7 +583,7 @@ class WOO_CUSTOME_FILTER_Widget {
 		//Advance Filters
 		if($advance_count){
 		
-			echo "<div class='woo_custome_advance_filter' style='margin-bottom:1.5em;'><h1 style='text-align:center'><a href='#'>Advance Filter</a></h1><div class='woo_custome_advance_filter_display'>";
+			echo "<div class='eo_wbc_advance_filter' style='margin-bottom:1.5em;'><h1 style='text-align:center'><a href='#'>Advance Filter</a></h1><div class='eo_wbc_advance_filter_display'>";
 			////////////////////////////////////////////////////////
 			//Advance filter...........................................
 			///////////////////////////////////////////////////////
@@ -489,8 +609,8 @@ class WOO_CUSTOME_FILTER_Widget {
 		}
 
 		//echo '<input type="hidden" name="_attribute" id="eo_wbc_attr_query" value="'.implode(',',$attr_list).'" />';
-		echo '<input type="hidden" name="_attribute" id="woo_custome_attr_query" value="" />';
-		echo "</div></form>";
+		echo '<input type="hidden" name="_attribute" id="eo_wbc_attr_query" value="" />';
+		echo "</div></div></form>";
 		/*if($this->eo_wbc_get_category()=='solitaire'){
 			echo "<div class='eo_wbc_filter_big_menu'>
 					<div class='eo_wbc_srch_btn'>compare</div>
@@ -500,7 +620,7 @@ class WOO_CUSTOME_FILTER_Widget {
 		}*/
 	}
 
-	private function woo_custome_filter_ui_icon($id,$title='',$type=0,$input='icon') {
+	private function eo_wbc_filter_ui_icon($id,$title='',$type=0,$input='icon') {
 
 		$non_edit=false;
 		$list=array();
@@ -527,12 +647,12 @@ class WOO_CUSTOME_FILTER_Widget {
 		<div>
 			<fieldset>
 				<legend><?php echo !empty($title) ? $title : get_term_by('id',$id,'product_cat')->name; ?></legend>
-				<div class="woo_custome_icon_grid ">					
+				<div class="eo_wbc_icon_grid ">					
 					<?php foreach ($list as $filter_icon): ?>
 							<div style="text-align: center;margin: 0px 3% 4% !important; <?php echo !$non_edit?'cursor: pointer;':''?> " 
 								title="<?php $filter_icon["name"]; ?>"
-								class="woo_custome_filter_icon <?php echo $non_edit ? 'none_editable':'' ?> 
-									<?php echo $filter_icon['mark'] ? 'woo_custome_filter_icon_select':''?>" 
+								class="eo_wbc_filter_icon <?php echo $non_edit ? 'none_editable':'' ?> 
+									<?php echo $filter_icon['mark'] ? 'eo_wbc_filter_icon_select':''?>" 
 								data-slug="<?php echo $filter_icon['slug']; ?>" 
 								data-filter="<?php echo get_term_by('id',$id,'product_cat')->slug; ?>">
 								<div>
@@ -543,7 +663,6 @@ class WOO_CUSTOME_FILTER_Widget {
 								<?php endif; ?>
 							</div>
 					<?php endforeach; ?>
-				</div>
 			</fieldset>
 			<input type='hidden' data-edit="<?php echo $non_edit?'0':'1'; ?>"
 					name='cat_filter_<?php echo get_term_by('id',$id,'product_cat')->slug; ?>' 
@@ -567,14 +686,50 @@ class WOO_CUSTOME_FILTER_Widget {
 					jQuery('[name="cat_filter_<?php echo get_term_by('id',$id,'product_cat')->slug; ?>"]')
 						.val(icon_val.substr(0,icon_val.length));
 					
-					jQuery(this).toggleClass('woo_custome_filter_icon_select');
-					$('[name="paged"]').val('1');
-					woo_custome_filter_change();
-				});				
+					jQuery(this).toggleClass('eo_wbc_filter_icon_select');
+					$('[name="_paged_"]').val('1');
+					eo_wbc_filter_change();
+				});
+
+				jQuery(".eo_wbc_srch_btn:eq(2)").on('reset',function(){	
+
+					if(jQuery("[name='cat_filter_<?php echo get_term_by('id',$id,'product_cat')->slug; ?>']").attr('data-edit')=='1') {
+						jQuery("[name='cat_filter_<?php echo get_term_by('id',$id,'product_cat')->slug; ?>']").val("");
+
+						jQuery(".eo_wbc_filter_icon_select").each(function(index,element){
+							jQuery(element).removeClass("eo_wbc_filter_icon_select");
+						});
+					}				
+				});
 			});
 		</script>
 		<?php
 	}	
+
+	//convert category id to slug
+	private function eo_wbc_id_2_slug($id) {
+        return get_term_by('id',$id,'product_cat')->slug;
+    }
+    
+    private function eo_wbc_get_category()
+    {        
+        global $wp_query;        
+        
+        //get list of slug which are ancestors of current page item's category
+        $term_slug=array_map(array('self',"eo_wbc_id_2_slug"),get_ancestors($wp_query->get_queried_object()->term_id, 'product_cat'));
+
+        //append current page's slug so that create complete list of terms including current term even if it is parent.
+        $term_slug[]=$wp_query->get_queried_object()->slug;                 
+
+        if(in_array(get_option('eo_wbc_first_slug'),$term_slug))
+        {
+            return get_option('eo_wbc_first_slug');
+        }
+        elseif(in_array(get_option('eo_wbc_second_slug'),$term_slug))
+        {
+            return get_option('eo_wbc_second_slug');
+        }
+    }
 
     //get min and max price.
 	protected function get_filtered_price() {
