@@ -1,11 +1,7 @@
-#eo_wbc_filter_table img{
+#woo_custome_filter_table img{
 	width:60px !important;
 	height:auto;
 }
-
-.products,.product-listing,.woocommerce-pagination,.pagination{
-	visibility:hidden;
-}	
 
 .loading{								
     background-color: rgba(255,255,255, 0.6);				    	
@@ -16,7 +12,7 @@
     top:0;
     left:0;				    
     z-index: 10000;				    				    
-    width: 100%;
+    width: 100% !important;
     height: 100%;					
 }			
 
@@ -25,7 +21,7 @@
 	color:rgb(134, 134, 134);
 	height:auto !important;
 }	
-.eo_wbc_filter_big_menu{
+.woo_custome_filter_big_menu{
 	margin: 5px 0px;
 	background-color:#444444;
 	color:#ffffff;
@@ -38,21 +34,21 @@
 	font-size:large;    				
 	overflow:hidden;
 }				
-.eo_wbc_filter_big_menu :active{
+.woo_custome_filter_big_menu :active{
 	color:#444444;
 }				
-.eo_wbc_srch_btn{					
+.woo_custome_srch_btn{					
 	padding: 0.2em 0px;
 	text-transform:uppercase;
 }				
-.eo_wbc_srch_btn:hover{
+.woo_custome_srch_btn:hover{
 	background-color:black;
 }
-.eo_wbc_input_text_slider{
+.woo_custome_input_text_slider{
 	display: flex;justify-content: space-between;padding-bottom:5px;
 }
 
-.eo_wbc_input_text_slider > input{
+.woo_custome_input_text_slider > input{
 	padding: 0px !important;
     color: black !important;
     height: 2em !important;
@@ -70,18 +66,19 @@
 .ui-state-default, .ui-widget-content .ui-state-default, .ui-widget-header .ui-state-default, .ui-button, html .ui-button.ui-state-disabled:hover, html .ui-button.ui-state-disabled:active{	    
 	font-weight: normal !important;	    
 }
-.eo_wbc_filter_icon:hover:not(.none_editable){
+.woo_custome_filter_icon:hover:not(.none_editable){
 	transition: 0.5s cubic-bezier(0.65, 0.05, 0.36, 1);
 }
 
 
-.eo_wbc_advance_filter a{
+.woo_custome_advance_filter a{
 	font-size: large;
 	font-weight: bold;
 }
 label{
   display: inline-block;
   text-align:center;
+  font-size: smaller;
 }
 label:first-child{
   text-align:left;
@@ -90,26 +87,31 @@ label:last-child{
   text-align:right;
 }
 
-.eo_wbc_filter_icon{
-	border-bottom:2px solid transparent;;
+.woo_custome_filter_icon{
+	border-bottom:2px solid transparent;	
+}
+.woo_custome_filter_icon img{
+	position: relative;
+    /*left: 50%;
+    transform: translate(-50%,0%);*/
 }
 
 legend{
 	font-weight: bold;
 	margin-bottom: 0.7em !important;
 }
-.eo_wbc_primary_filter > div,.eo_wbc_advance_filter_display > div{						
+.woo_custome_primary_filter > div,.woo_custome_advance_filter_display > div{						
 	width:40%;
 	margin-left:5%;	
 	display:inline-block;	
 	margin-top: 2%;
 }					
 
-.eo_wbc_primary_filter:after,.eo_wbc_advance_filter_display:after{
+.woo_custome_primary_filter:after,.woo_custome_advance_filter_display:after{
 	content:'';
 	clear:both !important;												
 }
-.eo_wbc_primary_filter,.eo_wbc_advance_filter_display{
+.woo_custome_primary_filter{
 	
 	display: flex;
     flex-wrap: wrap;
@@ -119,7 +121,7 @@ legend{
     padding: 15px 10px 15px;	
     margin-bottom:1em;				    
 }
-.eo_wbc_primary_filter fieldset,.eo_wbc_advance_filter fieldset{
+.woo_custome_primary_filter fieldset,.woo_custome_advance_filter_display fieldset{
 	border:none;
 	text-transform: uppercase;						
 }
@@ -130,25 +132,53 @@ legend{
 	    width: 7em !important;
 	    border: 1px solid black !important;
 	    text-align: center !important;
-}				
-.eo_wbc_icon_grid{
+}			
+.sliderValueContainer{
+	display: flex;
+    justify-content: space-between;
+}	
+.woo_custome_icon_grid{
 	display: grid;
 	grid-gap: 3%;
 	grid-template-columns: auto auto auto auto auto;
 }
+.woo_custome_icon_grid > div {
+	cursor: pointer;
+}
 @media only screen and (max-width: 1024px) {
-  	.eo_wbc_primary_filter > div,.eo_wbc_advance_filter_display > div{						
+  	.woo_custome_primary_filter > div,.woo_custome_advance_filter_display > div{						
 		width:100%;
 		margin-left:1%;	
 		display:inline-block;					
 	}	
-	.eo_wbc_primary_filter > div:last-child > fieldset,.eo_wbc_advance_filter_display > div:last-child > fieldset{
+	.woo_custome_primary_filter > div:last-child > fieldset,.woo_custome_advance_filter_display > div:last-child > fieldset{
 		display: contents;				
 	}
-	.eo_wbc_primary_filter > div:last-child input,.eo_wbc_advance_filter_display > div:last-child input{
+	.woo_custome_primary_filter > div:last-child input,.woo_custome_advance_filter_display > div:last-child input{
 		max-width:30%;
 	}
-	.eo_wbc_icon_grid{
+	.woo_custome_icon_grid{
 		grid-template-columns: auto auto auto;		
 	}
+}
+
+#woo_custome_filter_form{
+	margin-bottom: 1em;
+}
+.woo_custome_advance_filter_display{
+	display: flex;
+	border: 1px solid #e2e2e2;
+    padding: 15px 10px 15px;	
+    margin-bottom:1em;		
+}
+
+legend {
+    display: block;
+    width: 100%;
+    padding: 0;
+    margin-bottom: 20px; 
+    line-height: inherit;
+    color: #333;
+    border: 0;
+    border-bottom: 1px solid #e5e5e5;
 }

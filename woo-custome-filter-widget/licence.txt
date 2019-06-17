@@ -1,4 +1,4 @@
-            ===== WooCommerce Bundle Choice ======
+            ===== Woo Custom Filter Widget ======
 
 Copyright 2019 by the contributors
 
@@ -19,7 +19,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 This program incorporates work covered by the following copyright and
 permission notices:
 
-  WooCommerce Bundle Choice is released under the GPL-V3
+  Woo Custom Filter Widget is released under the GPL-V3
 
 
 =================================================================================
@@ -699,5 +699,3 @@ Public License instead of this License.  But first, please read
 <https://www.gnu.org/licenses/why-not-lgpl.html>.
 
 ==============================================================================
-This licence is inspired by woocommerce licence
-<https://github.com/woocommerce/woocommerce/blob/master/license.txt>
